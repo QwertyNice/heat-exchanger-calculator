@@ -1,8 +1,7 @@
 from math import log, pi
 import xlrd
 
-"""Добавил новый комментарий"""
-"""Еще один комментарий"""
+
 def interpolation(y_max, y_min, x_max, x_min, x):
     """Функция проводит интерполяцию данных"""
     return (y_max - y_min) / (x_max - x_min) * (x - x_min) + y_min
