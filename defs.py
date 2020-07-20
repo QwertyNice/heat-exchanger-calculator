@@ -109,3 +109,32 @@ def koef_teploperedachi(alpha1, alpha2, lyambda_steel, delta_l):
     """Функция считает коэффициент теплопередачи через стенку. Для упрощения взята формула для плоской однослойной стенки.
     Впоследствии функция будет усложняться"""
     return 1 / ((1 / alpha1) + (1 / alpha2) + (delta_l / lyambda_steel))
+
+def delta_t_avg(t1_in, t1_out, t2_in, t2_out):
+    """Функция считает следнелогарифмическую температурный напор при противотоке(дефолт)"""
+    if (t1_in - t2_out) > (t1_out - t2_in):
+        return ((t1_in - t2_out) - (t1_out - t2_in)) / log((t1_in - t2_out) / (t1_out - t2_in))
+    elif (t1_out - t2_in) > (t1_in - t2_out):
+        return ((t1_out - t2_in) - (t1_in - t2_out)) / log((t1_out - t2_in) / (t1_in - t2_out))
+
+
+
+def open_exel(t):
+    """Вывод теплофизических свойств из экселя"""
+    rb = xlrd.open_workbook('C:\\Users\\made\\Desktop\\Теплофизические свойства воды.xls', formatting_info=True)
+    sheet = rb.sheet_by_index(0)
+    count = 1
+    while count < sheet.nrows:
+        if sheet.row_values(count)[0] <= t < sheet.row_values(count + 1)[0]:
+            yx1 = sheet.row_values(count)
+            yx2 = sheet.row_values(count + 1)
+            return yx1, yx2
+        else:
+            count += 1
+
+
+def Foo(G1, c1, t1_in, t1_out, G2, c2, t2_in, t2_out,  K, delta_t):
+    if G2 == 0:
+        return G1 * c1 * (t1_in - t1_out) * 0.99 / (K * delta_t)
+    else:
+        return G2 * c2 * (t2_out - t2_in) * 0.99 / (K * delta_t)
