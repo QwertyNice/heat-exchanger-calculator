@@ -1,7 +1,8 @@
 import csv
 
-
 """Вводные параметры"""
+
+
 # print('Введите входные величины для расчета:')
 # D_out = float(input('Внешний диаметр трубы, мм: '))
 # delta_l = float(input('Толщина стенки трубы, мм: '))
@@ -20,11 +21,10 @@ def interpolation(y_max, y_min, x_max, x_min, x):
     return (y_max - y_min) / (x_max - x_min) * (x - x_min) + y_min
 
 
-
 class TOA:
     """Осной класс в котором будут инициализироваться инпуты и определять какой параметр надо высчитывать"""
 
-    def __init__(self, D_out=None, delta_l=None, t1_in=None, t1_out=None,
+    def __init__(self, D_out, delta_l=None, t1_in=None, t1_out=None,
                  t2_in=None, t2_out=None, lyambda_steel=None, l=None):
         self.D_out = D_out
         self.delta_l = delta_l
@@ -49,22 +49,25 @@ class TOA:
 class Domain:
     """Класс для подсчета характеристик теплоносителя (Nu, Re и тд)"""
 
-    def __init__(self, matter, G, w, t_in, t_out):
+    def __init__(self, matter, G, w, t_in, t_out, space, D_out, delta_l):       # Вводятся внешний диаметр и толщина
+        self.D_out = D_out
+        self.delta_l = delta_l
+        self.space = space
         self.matter = matter
         self.G = G
         self.w = w
-        self.t_in = t_in
-        self.t_out = t_out
+        # self.t_in = t_in
+        # self.t_out = t_out
         self.t_avr = (t_in + t_out) / 2
         self._dict_phys = dict()
 
-    def phys_props(self):
-        assert 0 <= self.t_avr < 370                           # Добавили ассер, потом чекнуть
+    def solve_phys_props(self):                                                 # Посомтреть вызов медоза заранее
+        assert 0 <= self.t_avr < 370                                            # Добавили ассер, потом чекнуть
         with open('{}.csv'.format(self.matter)) as f:
             line_generator = csv.reader(f, delimiter=';')
             next(line_generator)
             symbol_phys = next(line_generator)
-            line_generator = list(line_generator)              # Сделали через лист (помойкак)
+            line_generator = list(line_generator)  # Сделали через лист (помойкак)
             len_line_generator = len(line_generator)
             for index in range(len_line_generator):
                 if float(line_generator[index - 1][0]) <= self.t_avr < float(line_generator[index][0]):
@@ -72,29 +75,26 @@ class Domain:
                     line_generator_max = list(map(float, line_generator[index]))
                     for i in range(len(symbol_phys)):
                         self._dict_phys[symbol_phys[i]] = interpolation(line_generator_max[i],
-                                                                   line_generator_min[i],
-                                                                   line_generator_max[0],
-                                                                   line_generator_min[0], self.t_avr)
-                    return line_generator_min, line_generator_max
+                                                                        line_generator_min[i],
+                                                                        line_generator_max[0],
+                                                                        line_generator_min[0], self.t_avr)
+                    return self._dict_phys
+
+    def solve_re(self):
+        if self.space == 'in':
+            return self.w * (self.D_out - 2 * self.delta_l) / self._dict_phys['ny']
+        else:
+            return self.w * self.D_out / self._dict_phys['ny']
 
 
-# class SolveSquare:
-#
-#     def __init__(self, toa):
-#         self.a = toa.__dict__
-#
-#
-# toa = TOA()
-#
-# solve = SolveSquare(toa)
+# try:
+#     toa = TOA()
+# except TypeError as err:
+#     print(err.__dir__())
+# solve = Domain(1, 1, 1, 1, 1, 1)
+# print(solve.D_out)
 # print(solve.a)
 # # toa.show_undef_attr()
 
-
-
-
-
-
-
-
-
+a = input()
+print(list(a))
