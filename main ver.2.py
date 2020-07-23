@@ -1,5 +1,8 @@
 import csv
 import defs
+import math
+
+
 """Вводные параметры"""
 # print('Введите входные величины для расчета:')
 # D_out = float(input('Внешний диаметр трубы, мм: '))
@@ -42,22 +45,22 @@ class TOA:
 
 class Domain:
     """ Класс для подсчета характеристик теплоносителя (Nu, Re и тд). """
-    def __init__(self, matter, G, w, t_in, t_out, space, D_out, delta_l, length):       # Вводятся внешний диаметр и толщина
+    def __init__(self, matter, t_in, t_out, space, D_out, delta_l, length, consumption=None, w=None):       # Вводятся внешний диаметр и толщина
         self.D_out = D_out
         self.delta_l = delta_l
         self.space = space
         self.matter = matter
-        self.G = G
-        self.w = w
         # self.t_in = t_in
         # self.t_out = t_out
         self.t_avr = (t_in + t_out) / 2
         self.length = length
         self.D_in = D_out - 2 * delta_l
         self._dict_phys = self.solve_phys_props()
+        self.w = w or ((4 * consumption) / (math.pi * self.D_in ** 2 * self._dict_phys['ro']))   # Расход для условия потока В ТРУБЕ
         self.re = self.solve_re()
         self.pr_domain = self.solve_pr()
         self.nu = self.solve_nu()
+        self.heat_transfer_coefficient = self.solve_heat_transfer_coefficient()
 
     def solve_phys_props(self):                                                 # Посомтреть вызов медода заранее
         """ Функция считывает файл с теплофизическими свойствами и возвращает словарь с
@@ -103,12 +106,27 @@ class Domain:
             return defs.el_turbulent_count(self.re, self.length, self.D_in)
         return 1
 
-    def solve_epsilon_t_count(self):     # Додумать тему с расчетом температуры стенки икак следствие попарвочного коэфф
+    def solve_epsilon_t_count(self):     # Додумать тему с расчетом температуры стенки, как следствие попарвочного коэфф
         pass
 
-    def solve_nu(self):
-        pass
+    def solve_nu(self):                  # Ассерт при Re < 0 добавить
+        if self.re < 2300:
+            return defs.nu_lam_count(self.re, self.pr_domain, self.solve_epsilon_t_count(),
+                                     self.solve_epsilon_l_lam_count())
+        elif 2300 <= self.re < 10_000:
+            return defs.nu_per_count(self.re, self.pr_domain, self.solve_epsilon_t_count())
+        else:
+            return defs.nu_turbulent_count(self.re, self.pr_domain, self.solve_epsilon_t_count(),
+                                           self.solve_epsilon_l_turbulent_count())
+
+    def solve_heat_transfer_coefficient(self):
+        if self.space == 'in':
+            return defs.heat_transfer_coefficient(self.nu, self._dict_phys['lambda_'], self.D_in)
+        else:
+            return defs.heat_transfer_coefficient(self.nu, self._dict_phys['lambda_'], self.D_out)
 
 
-# solve = Domain('water', 5, 2, 100, 50, 'in', 0.05, 0.005, 5)
-# print(solve.re)
+if __name__ == '__main__':
+    solve = Domain('water', 100, 50, 'in', 0.05, 0.005, 5, w=2)
+    print(solve.heat_transfer_coefficient)
+    # print(solve.re)
