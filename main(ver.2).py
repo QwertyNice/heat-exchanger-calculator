@@ -7,21 +7,24 @@ class Domain:
     """
     Класс для подсчета характеристик теплоносителя (Nu, Re и тд).
     """
-    local_dict_of_domains = {'heat': None, 'cool': None}
+    local_dict_of_domains = {'heat': __name__, 'cool': __name__}
+    # Чтобы не ругался
 
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls)
-        cls.local_dict_of_domains[kwargs['state']] = obj  # TODO добавка в словарь
+        cls.local_dict_of_domains[kwargs['state']] = obj
         return obj
 
-    def __init__(self, matter, state,  t_in, t_out, space, d_out, delta_l,
-                 length, consumption=None, w=None):  # TODO
+    def __init__(self, matter, t_in, t_out, space, d_out, delta_l,
+                 length, consumption=None, w=None, state=None):  # Все плохо
         # Вводятся внешний диаметр и толщина
         self.state = state  # Его роль для dict_of_domains
         self.d_out = d_out
         self.delta_l = delta_l
         self.space = space
         self.matter = matter
+        self.t_in = t_in
+        self.t_out = t_out
         self.t_avr = (t_in + t_out) / 2
         self.length = length
         self.d_in = d_out - 2 * delta_l
@@ -46,7 +49,7 @@ class Domain:
             line_generator = csv.reader(f, delimiter=';')
             next(line_generator)
             symbol_phys = next(line_generator)
-            line_generator = list(line_generator)  # TODO
+            line_generator = list(line_generator)  # Переделать генератор
             # Сделали через лист (помойкак)
             len_line_generator = len(line_generator)
             for index in range(len_line_generator):
@@ -74,7 +77,8 @@ class Domain:
         """
         Находит число Nu для потока жидкости в зависимости от его положения.
         """
-        return self._dict_phys['cp'] * self._dict_phys['ro'] * self._dict_phys['ny'] / self._dict_phys['lambda_']
+        return self._dict_phys['cp'] * self._dict_phys['ro'] * \
+            self._dict_phys['ny'] / self._dict_phys['lambda_']
 
     def solve_epsilon_l_lam_count(self):
         """
@@ -93,12 +97,12 @@ class Domain:
             return defs.el_turbulent_count(self.re, self.length, self.d_in)
         return 1
 
-    def solve_epsilon_t_count(self):  # TODO
+    def solve_epsilon_t_count(self):
         # Додумать тему с расчетом температуры стенки,
         # как следствие попарвочного коэфф
-        pass
+        return 1
 
-    def solve_nu(self):  # TODO Ассерт при Re < 0 добавить
+    def solve_nu(self):  # Ассерт при Re < 0 добавить
         """
         Находит число Nu для потока жидкости в зависимости от его положения.
         """
@@ -129,23 +133,30 @@ class Domain:
                                                   self.d_out)
 
 
-class SolverTOA:  # TODO переименовать
+class SolverTOA:  # Переименовать
     """
-    Осной класс в котором будут инициализироваться инпуты и определять какой
+    Основной класс в котором будут инициализироваться инпуты и определять какой
     параметр надо высчитывать.
     """
 
     def __init__(self, dict_of_domains, lambda_steel):
-        # TODO Тут я убрал None У D_out
+        # Тут я убрал None У D_out
         # self.dict_of_domains = dict_of_domains
-        self.alpha_heat = dict_of_domains['heat'].alpha1
-        self.alpha_cool = dict_of_domains['cool'].alpha2
+        self.alpha_heat = dict_of_domains['heat'].heat_coefficient
+        self.alpha_cool = dict_of_domains['cool'].heat_coefficient
         self.lambda_steel = lambda_steel
         self.delta_l = dict_of_domains['cool'].delta_l
+        self.t_in_heat = dict_of_domains['heat'].t_in
+        self.t_out_heat = dict_of_domains['heat'].t_out
+        self.t_in_cool = dict_of_domains['cool'].t_in
+        self.t_out_cool = dict_of_domains['cool'].t_out
 
     def solve_heat_transfer_coefficient(self):
         return 1 / ((1 / self.alpha_heat) + (1 / self.alpha_cool) +
                     (self.delta_l / self.lambda_steel))
+
+    def avg_log_delta_temperature(self):  # TODO
+        pass
 
 
 class Test:
@@ -166,10 +177,6 @@ def interpolation(y_max, y_min, x_max, x_min, x):
     Функция проводит интерполяцию данных.
     """
     return (y_max - y_min) / (x_max - x_min) * (x - x_min) + y_min
-
-
-
-
 
 
 def input_values():
@@ -194,9 +201,8 @@ def main():
 
 
 if __name__ == '__main__':
-    SolverTOA(Test.dict_of_domains['heat'].alpha1, )
-    print(Test.dict_of_domains)
-    domain1 = Test(1, state='cool')
-    domain2 = Test(2, state='heat')
-    print(__name__.alpha1)
-    print(Test.dict_of_domains['heat'].alpha1)
+    # domain_1 = Domain('water', 100, 50, 'in', 2, 0.3, 2, consumption=2,
+    # state='heat')
+    # domain_2 = Domain('water', 100, 50, 'out', 2, 0.3, 2, w=2, state='cool')
+    # print(domain_1.local_dict_of_domains['heat'].heat_coefficient)
+    pass
