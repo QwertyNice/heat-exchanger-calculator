@@ -1,4 +1,4 @@
-from math import pi
+from math import pi, log
 
 
 def interpolation(y_max, y_min, x_max, x_min, x):
@@ -116,7 +116,7 @@ def open_exel(t):
             count += 1
 
 
-def Foo(G1, c1, t1_in, t1_out, G2, c2, t2_in, t2_out,  K, delta_t):
+def heat_exchange_area(G1, c1, t1_in, t1_out, G2, c2, t2_in, t2_out,  K, delta_t):
     if G2 == 0:
         return G1 * c1 * (t1_in - t1_out) * 0.99 / (K * delta_t)
     else:

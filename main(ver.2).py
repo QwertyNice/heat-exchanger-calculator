@@ -27,11 +27,13 @@ class Domain:
         self.t_out = t_out
         self.t_avr = (t_in + t_out) / 2
         self.length = length
-        self.d_in = d_out - 2 * delta_l
-        self._dict_phys = self.solve_phys_props()
+        self.d_in = d_out - 2*delta_l
+        self.dict_phys = self.solve_phys_props()
+        self.consumption = consumption or (math.pi * self.d_in ** 2 *
+                                           self.dict_phys['ro']) / 4
         self.w = w or ((4 * consumption) /
-                       (math.pi * self.d_in ** 2 * self._dict_phys['ro']))
-        # Расход для условия потока В ТРУБЕ
+                       (math.pi * self.d_in ** 2 * self.dict_phys['ro']))
+        # Расход и скорость для условия потока В ТРУБЕ
         self.re = self.solve_re()
         self.pr_domain = self.solve_pr()
         self.nu = self.solve_nu()
@@ -70,15 +72,15 @@ class Domain:
         Находит число Re для потока жидкости в зависимости от его положения.
         """
         if self.space == 'in':
-            return self.w * self.d_in / self._dict_phys['ny']
-        return self.w * self.d_out / self._dict_phys['ny']
+            return self.w * self.d_in / self.dict_phys['ny']
+        return self.w * self.d_out / self.dict_phys['ny']
 
     def solve_pr(self):
         """
         Находит число Nu для потока жидкости в зависимости от его положения.
         """
-        return self._dict_phys['cp'] * self._dict_phys['ro'] * \
-            self._dict_phys['ny'] / self._dict_phys['lambda_']
+        return self.dict_phys['cp'] * self.dict_phys['ro'] * \
+               self.dict_phys['ny'] / self.dict_phys['lambda_']
 
     def solve_epsilon_l_lam_count(self):
         """
@@ -125,11 +127,11 @@ class Domain:
         """
         if self.space == 'in':
             return defs.heat_transfer_coefficient(self.nu,
-                                                  self._dict_phys['lambda_'],
+                                                  self.dict_phys['lambda_'],
                                                   self.d_in)
         else:
             return defs.heat_transfer_coefficient(self.nu,
-                                                  self._dict_phys['lambda_'],
+                                                  self.dict_phys['lambda_'],
                                                   self.d_out)
 
 
@@ -141,7 +143,7 @@ class SolverTOA:  # Переименовать
 
     def __init__(self, dict_of_domains, lambda_steel):
         # Тут я убрал None У D_out
-        # self.dict_of_domains = dict_of_domains
+        self.dict_of_domains = dict_of_domains
         self.alpha_heat = dict_of_domains['heat'].heat_coefficient
         self.alpha_cool = dict_of_domains['cool'].heat_coefficient
         self.lambda_steel = lambda_steel
@@ -150,13 +152,23 @@ class SolverTOA:  # Переименовать
         self.t_out_heat = dict_of_domains['heat'].t_out
         self.t_in_cool = dict_of_domains['cool'].t_in
         self.t_out_cool = dict_of_domains['cool'].t_out
+        self.heat_transfer_coefficient = self.solve_heat_transfer_coefficient()
+        self.avg_log_delta_temperature = self.solve_avg_log_delta_temperature()
+        self.heat_exchange_area = self.solve_heat_exchange_area()
 
     def solve_heat_transfer_coefficient(self):
         return 1 / ((1 / self.alpha_heat) + (1 / self.alpha_cool) +
                     (self.delta_l / self.lambda_steel))
 
-    def avg_log_delta_temperature(self):  # TODO
-        pass
+    def solve_avg_log_delta_temperature(self):
+        return defs.delta_t_avg(t1_in=self.t_in_heat, t1_out=self.t_out_heat,
+                                t2_in=self.t_in_cool, t2_out=self.t_out_cool)
+
+    def solve_heat_exchange_area(self):
+        return self.dict_of_domains['heat'].consumption * \
+               self.dict_of_domains['heat'].dict_phys['cp'] * \
+               (self.t_in_heat - self.t_out_heat) / \
+               (self.heat_transfer_coefficient * self.avg_log_delta_temperature)
 
 
 class Test:
@@ -201,8 +213,11 @@ def main():
 
 
 if __name__ == '__main__':
-    # domain_1 = Domain('water', 100, 50, 'in', 2, 0.3, 2, consumption=2,
-    # state='heat')
-    # domain_2 = Domain('water', 100, 50, 'out', 2, 0.3, 2, w=2, state='cool')
-    # print(domain_1.local_dict_of_domains['heat'].heat_coefficient)
-    pass
+    domain_1 = Domain('water', 95, 70, 'in', 0.1, 0.01, 6, consumption=2,
+                      state='heat')
+
+    domain_2 = Domain('water', 20, 50, 'out', 0.1, 0.01, 6, w=1.5,
+                      state='cool')
+
+    solver = SolverTOA(Domain.local_dict_of_domains, 55)
+    print(solver.heat_exchange_area)
