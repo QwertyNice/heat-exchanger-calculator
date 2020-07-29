@@ -16,14 +16,14 @@ def Re_count(w, d, ny):
     return w * d / ny
 
 
-def Pr_count(c, ro, ny, lyambda):
+def pr_count(cp, ro, ny, lambda_):
     """Функция считает число Прандтля"""
-    return c * ro * ny / lyambda
+    return cp * ro * ny / lambda_
 
 
-def et_count(Pr_water, Pr_wall):
+def epsilon_t_count(pr_domain, pr_wall):
     """Функция считает попровку на температуру"""
-    return (Pr_water / Pr_wall) ** 0.25
+    return (pr_domain / pr_wall) ** 0.25
 
 
 def el_lam_count(l, d):
