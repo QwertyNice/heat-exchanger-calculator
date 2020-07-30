@@ -280,5 +280,5 @@ if __name__ == '__main__':
     domain_2 = Domain('water', 20, 50, 'out', 0.1, 0.01, 6, w=1.5,
                       state='cool')
     solver = SolverTOA(Domain.local_dict_of_domains, 55)
-    hui = SuccessiveApproximation(Domain.local_dict_of_domains, solver)
-    print(hui.approximation())
+    approx = SuccessiveApproximation(Domain.local_dict_of_domains, solver)
+    print(approx.approximation())
