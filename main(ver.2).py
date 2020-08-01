@@ -16,7 +16,7 @@ class Domain:
         return obj
 
     def __init__(self, matter, t_in, t_out, space, d_out, delta_l,
-                 length, consumption=None, w=None, state=None, t_avr_w=None):
+                 length, state, consumption=None, w=None, t_avr_w=None):
         # Все плохо
         # Вводятся внешний диаметр и толщина
         self.state = state  # Его роль для dict_of_domains
@@ -154,7 +154,7 @@ class Domain:
                                                   self.d_out)
 
 
-class SolverTOA:  # Переименовать
+class HeatExchangerSolver:
     """
     Основной класс в котором будут инициализироваться инпуты и определять какой
     параметр надо высчитывать.
@@ -191,12 +191,17 @@ class SolverTOA:  # Переименовать
 
 
 class SuccessiveApproximation:
+    """"
+    Класс, который проводит последовательное приближение температуры стенки к
+    фактическому значению с погрешностью не более 5%
+    """
     def __init__(self, dict_of_domains, obj_solver_toa):
-        # сюда надо из картинки аргументы
         self.obj_solver_toa = obj_solver_toa
         self.dict_of_domains = dict_of_domains
-        self.avg_log_delta_temperature = obj_solver_toa.avg_log_delta_temperature
-        self.heat_transfer_coefficient = obj_solver_toa.heat_transfer_coefficient
+        self.avg_log_delta_temperature = \
+            obj_solver_toa.avg_log_delta_temperature
+        self.heat_transfer_coefficient = \
+            obj_solver_toa.heat_transfer_coefficient
 
     def approximation(self):
         t_avg_heat_wall = self.dict_of_domains['heat'].t_avr - \
@@ -209,41 +214,40 @@ class SuccessiveApproximation:
                           self.avg_log_delta_temperature / \
                           self.dict_of_domains['cool'].heat_coefficient
 
-        print(t_avg_heat_wall)
-        print(t_avg_cool_wall)
-        print(t_avg_heat_wall - t_avg_cool_wall)
-        print((self.dict_of_domains['heat'].delta_l / self.obj_solver_toa.lambda_steel) *
-                  self.heat_transfer_coefficient *
-                  self.avg_log_delta_temperature)
-
         cost = ((t_avg_heat_wall - t_avg_cool_wall) -
-                  (self.dict_of_domains['heat'].delta_l / self.obj_solver_toa.lambda_steel) *
-                  self.heat_transfer_coefficient *
-                  self.avg_log_delta_temperature)
+                (self.dict_of_domains['heat'].delta_l /
+                self.obj_solver_toa.lambda_steel) *
+                self.heat_transfer_coefficient *
+                self.avg_log_delta_temperature)
 
         error = cost / (t_avg_heat_wall - t_avg_cool_wall)
-
-        print('Эрор до цикла', error)
 
         while error > 0.05:  # Тут надо модуль
             obj_heat = self.dict_of_domains['heat']
             obj_cool = self.dict_of_domains['cool']
+
             obj_heat.__init__(matter=obj_heat.matter, t_in=obj_heat.t_in,
                               t_out=obj_heat.t_out, space=obj_heat.space,
                               d_out=obj_heat.d_out, delta_l=obj_heat.delta_l,
                               length=obj_heat.length,
                               consumption=obj_heat.consumption, w=obj_heat.w,
                               state=obj_heat.state, t_avr_w=t_avg_heat_wall)
+
             obj_cool.__init__(matter=obj_cool.matter, t_in=obj_cool.t_in,
                               t_out=obj_cool.t_out, space=obj_cool.space,
                               d_out=obj_cool.d_out, delta_l=obj_cool.delta_l,
                               length=obj_cool.length,
                               consumption=obj_cool.consumption, w=obj_cool.w,
                               state=obj_cool.state, t_avr_w=t_avg_cool_wall)
-            self.obj_solver_toa.__init__(dict_of_domains=Domain.local_dict_of_domains,
-                                         lambda_steel=self.obj_solver_toa.lambda_steel)
+
+            self.obj_solver_toa.__init__(dict_of_domains=
+                                         Domain.local_dict_of_domains,
+                                         lambda_steel=
+                                         self.obj_solver_toa.lambda_steel)
+
             self.__init__(dict_of_domains=Domain.local_dict_of_domains,
                           obj_solver_toa=self.obj_solver_toa)
+
             t_avg_heat_wall = obj_heat.t_avr - \
                               (self.heat_transfer_coefficient *
                               self.avg_log_delta_temperature /
@@ -279,24 +283,31 @@ def input_values():
     """
     Вводные параметры
     """
-    # print('Введите входные величины для расчета:')
-    # d_out = float(input('Внешний диаметр трубы, мм: '))
-    # delta_l = float(input('Толщина стенки трубы, мм: '))
-    # t1_in = float(input('Температура на входе со стороны горячего '
-    #                     'теплоносителя, °C: '))
-    # t1_out = float(input('Температура на выходе со стороны горячего '
-    #                      'теплоносителя, °C: '))
-    # t2_in = float(input('Температура на входе со стороны холодного '
-    #                     'теплоносителя, °C: '))
-    # t2_out = float(input('Температура на выходе со стороны холодного '
-    #                      'теплоносителя, °C: '))
-    # lambda_steel = float(input('Коэффициент теплопроводности металла стенки '
-    #                            'трубы, Вт/(м∙град): '))
-    # print('Предположительная длина трубы (данная величина влияет лишь на '
-    #       'расчет участка стабилизации)')
-    # print('В случае, если данную поправку не требуется учитывать, введите: '
-    #       '10000')
-    # lenght = float(input('Предположительная длина трубы, м: '))
+    print('Введите входные величины для расчета:')
+    d_out = float(input('Внешний диаметр трубы, мм: '))
+
+
+
+    delta_l = float(input('Толщина стенки трубы, мм: '))
+    t1_in = float(input('Температура на входе со стороны горячего '
+                        'теплоносителя, °C: '))
+    t1_out = float(input('Температура на выходе со стороны горячего '
+                         'теплоносителя, °C: '))
+    t2_in = float(input('Температура на входе со стороны холодного '
+                        'теплоносителя, °C: '))
+    t2_out = float(input('Температура на выходе со стороны холодного '
+                         'теплоносителя, °C: '))
+    lambda_steel = float(input('Коэффициент теплопроводности металла стенки '
+                               'трубы, Вт/(м∙град): '))
+
+
+    print('Предположительная длина трубы (данная величина влияет лишь на '
+          'расчет участка стабилизации)')
+    print('В случае, если данную поправку не требуется учитывать, введите: '
+          '10000')
+    length = float(input('Предположительная длина трубы, м: '))
+
+
 
 
 def main():
@@ -304,21 +315,13 @@ def main():
 
 
 if __name__ == '__main__':
-    domain_1 = Domain(matter='water', t_in=95, t_out=70, space='in', d_out=0.1,
-                      delta_l=0.01, length=6, consumption=2, state='heat')
-
-    domain_2 = Domain('water', 20, 50, 'out', 0.1, 0.01, 6, w=1.5,
-                      state='cool')
-    solver = SolverTOA(Domain.local_dict_of_domains, 55)
-    approx = SuccessiveApproximation(Domain.local_dict_of_domains, solver)
-    # print(domain_1.__dict__)
-    # print(domain_2.__dict__)
-    # print(solver.__dict__)
-    # print(approx.__dict__)
-    # print()
-    print(approx.approximation())
-    # print()
-    # print(domain_1.__dict__)
-    # print(domain_2.__dict__)
-    # print(solver.__dict__)
-    # print(approx.__dict__)
+    pass
+    # domain_1 = Domain(matter='water', t_in=95, t_out=70, space='in', d_out=0.1,
+    #                   delta_l=0.01, length=6, consumption=2, state='heat')
+    #
+    # domain_2 = Domain('water', 20, 50, 'out', 0.1, 0.01, 6, w=1.5,
+    #                   state='cool')
+    # solver = HeatExchangerSolver(Domain.local_dict_of_domains, 55)
+    # approx = SuccessiveApproximation(Domain.local_dict_of_domains, solver)
+    # print(approx.approximation())
+    # input_values()
