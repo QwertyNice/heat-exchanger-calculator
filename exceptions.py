@@ -1,4 +1,4 @@
-class HeatError(Exception):
+class HeatError(BaseException):
     pass
 
 
