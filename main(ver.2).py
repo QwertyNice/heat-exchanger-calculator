@@ -1,6 +1,7 @@
 import csv
 import math
 import defs
+from input import InputValues
 
 
 class Domain:
@@ -285,9 +286,6 @@ def input_values():
     """
     print('Введите входные величины для расчета:')
     d_out = float(input('Внешний диаметр трубы, мм: '))
-
-
-
     delta_l = float(input('Толщина стенки трубы, мм: '))
     t1_in = float(input('Температура на входе со стороны горячего '
                         'теплоносителя, °C: '))
@@ -299,8 +297,6 @@ def input_values():
                          'теплоносителя, °C: '))
     lambda_steel = float(input('Коэффициент теплопроводности металла стенки '
                                'трубы, Вт/(м∙град): '))
-
-
     print('Предположительная длина трубы (данная величина влияет лишь на '
           'расчет участка стабилизации)')
     print('В случае, если данную поправку не требуется учитывать, введите: '
@@ -308,20 +304,11 @@ def input_values():
     length = float(input('Предположительная длина трубы, м: '))
 
 
-
-
 def main():
     pass
 
 
 if __name__ == '__main__':
+    # a = InputValues()
+    # print(a.__dict__)
     pass
-    # domain_1 = Domain(matter='water', t_in=95, t_out=70, space='in', d_out=0.1,
-    #                   delta_l=0.01, length=6, consumption=2, state='heat')
-    #
-    # domain_2 = Domain('water', 20, 50, 'out', 0.1, 0.01, 6, w=1.5,
-    #                   state='cool')
-    # solver = HeatExchangerSolver(Domain.local_dict_of_domains, 55)
-    # approx = SuccessiveApproximation(Domain.local_dict_of_domains, solver)
-    # print(approx.approximation())
-    # input_values()
