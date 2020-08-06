@@ -4,3 +4,7 @@ class HeatError(BaseException):
 
 class InputError(HeatError):
     pass
+
+
+class CustomError(BaseException):
+    pass
