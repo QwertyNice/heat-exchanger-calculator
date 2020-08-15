@@ -1,7 +1,8 @@
 from math import pi, log
 
 
-def interpolation(y_max, y_min, x_max, x_min, x):
+def interpolation(y_max: float, y_min: float, x_max: float, 
+	              x_min: float, x: float) -> float:
     """Функция проводит интерполяцию данных"""
     return (y_max - y_min) / (x_max - x_min) * (x - x_min) + y_min
 
