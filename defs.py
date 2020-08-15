@@ -1,13 +1,13 @@
 from math import pi, log
 
 
-def interpolation(y_max: float, y_min: float, x_max: float, 
-	              x_min: float, x: float) -> float:
+def interpolation(y_max: float, y_min: float, x_max: float, x_min: float,
+                  x: float) -> float:
     """Функция проводит интерполяцию данных"""
     return (y_max - y_min) / (x_max - x_min) * (x - x_min) + y_min
 
 
-def w_count(G, d, ro):
+def w_count(G: float, d: float, ro: float) -> float:
     """Функция считает скорость по уравнению неразрывности"""
     return G / (ro * pi * d ** 2 / 4)
 
@@ -27,21 +27,25 @@ def epsilon_t_count(pr_domain, pr_wall):
     return (pr_domain / pr_wall) ** 0.25
 
 
-def el_lam_count(l, d):
+def el_lam_count(length, d):
     """Функция считает поправку на участок стабилизации при ламинарном режиме"""
-    el_m = [[1, 1.9], [4, 1.7], [5, 1.44], [10, 1.28], [15, 1.18], [20, 1.13], [30, 1.05], [40, 1.02], [50, 1]]
-    if l / d >= 50:
+    el_m = [[1, 1.9], [4, 1.7], [5, 1.44], [10, 1.28], [15, 1.18], [20, 1.13],
+            [30, 1.05], [40, 1.02], [50, 1]]
+    if length / d >= 50:
         return 1
-    elif l / d < 1:
+    elif length / d < 1:
         raise AssertionError('Диаметр превышает значение длины трубы!')
     else:
         for i in el_m:
-            if i[0] == l / d:
+            if i[0] == length / d:
                 return i[1]
-            else:  # Если такого отношения нет, то делается интерполяция по вышеуказанной функции interpolation
+            else:  # Если такого отношения нет, то делается интерполяция по
+                # вышеуказанной функции interpolation
                 for j in range(len(el_m)):
-                    if el_m[j + 1][0] > l / d > el_m[j][0]:
-                        return interpolation(el_m[j + 1][1], el_m[j][1], el_m[j + 1][0], el_m[j][0], l / d)
+                    if el_m[j + 1][0] > length / d > el_m[j][0]:
+                        return interpolation(el_m[j + 1][1], el_m[j][1],
+                                             el_m[j + 1][0], el_m[j][0],
+                                             length / d)
 
 
 def el_turbulent_count(Re, l, d):
