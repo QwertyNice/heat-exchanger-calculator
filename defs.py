@@ -12,7 +12,7 @@ def w_count(G: float, d: float, ro: float) -> float:
     return G / (ro * pi * d ** 2 / 4)
 
 
-def Re_count(w, d, ny):
+def Re_count(w: float, d: float, ny: float) -> float:
     """Функция считает число Рейнольдса"""
     return w * d / ny
 
