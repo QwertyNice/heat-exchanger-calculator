@@ -117,7 +117,6 @@ def koef_teploperedachi(alpha1: float, alpha2: float, lambda_steel: float,
     """Функция считает коэффициент теплопередачи через стенку. Для упрощения
     взята формула для плоской однослойной стенки. Впоследствии функция будет
     усложняться
-
     """
     """Not used"""
     return 1 / ((1 / alpha1) + (1 / alpha2) + (delta_l / lambda_steel))
@@ -126,28 +125,14 @@ def koef_teploperedachi(alpha1: float, alpha2: float, lambda_steel: float,
 def delta_t_avg(t1_in: float, t1_out: float, t2_in: float,
                 t2_out: float) -> float:
     """Функция считает следнелогарифмический температурный напор"""
-    if (t1_in - t2_out) > (t1_out - t2_in):
+    if (t1_in - t2_out) == (t1_out - t2_in):
+        return t1_in - t1_out - t2_in + t2_out
+    elif (t1_in - t2_out) > (t1_out - t2_in):
         return ((t1_in - t2_out) - (t1_out - t2_in)) / \
                 log((t1_in - t2_out) / (t1_out - t2_in))
-    elif (t1_out - t2_in) > (t1_in - t2_out):
+    elif (t1_in - t2_out) < (t1_out - t2_in):
         return ((t1_out - t2_in) - (t1_in - t2_out)) / \
                 log((t1_out - t2_in) / (t1_in - t2_out))
-
-
-def open_exel(t: float):
-    """Вывод теплофизических свойств из экселя"""
-    """Deprecated"""
-    rb = xlrd.open_workbook('C:\\Users\\made\\Desktop\\Теплофизические '
-                            'свойства воды.xls', formatting_info=True)
-    sheet = rb.sheet_by_index(0)
-    count = 1
-    while count < sheet.nrows:
-        if sheet.row_values(count)[0] <= t < sheet.row_values(count + 1)[0]:
-            yx1 = sheet.row_values(count)
-            yx2 = sheet.row_values(count + 1)
-            return yx1, yx2
-        else:
-            count += 1
 
 
 def heat_exchange_area(G1: float, cp1: float, t1_in: float, t1_out: float,
