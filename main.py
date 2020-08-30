@@ -204,7 +204,7 @@ class SuccessiveApproximation:
         self.heat_transfer_coefficient = \
             obj_solver_toa.heat_transfer_coefficient
 
-    def approximation(self):  # TODO доделать
+    def approximation(self):
         t_avg_heat_wall = self.dict_of_domains['heat'].t_avr - \
             self.heat_transfer_coefficient * \
             self.avg_log_delta_temperature / \
@@ -215,17 +215,16 @@ class SuccessiveApproximation:
             self.avg_log_delta_temperature / \
             self.dict_of_domains['cool'].heat_coefficient
 
-        delta_error = ((t_avg_heat_wall - t_avg_cool_wall) -
-                       (self.dict_of_domains['heat'].delta_l /
-                        self.obj_solver_toa.lambda_steel) *
-                       self.heat_transfer_coefficient *
-                       self.avg_log_delta_temperature)
+        error_heat = (self.dict_of_domains['heat'].t_avr - t_avg_heat_wall) / \
+            self.dict_of_domains['heat'].t_avr
+        error_cool = (t_avg_cool_wall - self.dict_of_domains['cool'].t_avr) / \
+            t_avg_cool_wall
 
-        error = math.fabs(delta_error / (t_avg_heat_wall - t_avg_cool_wall))
-
-        while error > 0.05:
+        while (error := max(error_heat, error_cool)) > 0.05:
             obj_heat = self.dict_of_domains['heat']
             obj_cool = self.dict_of_domains['cool']
+            t_avg_heat_wall_prev = t_avg_heat_wall
+            t_avg_cool_wall_prev = t_avg_cool_wall
 
             obj_heat.__init__(matter=obj_heat.matter, t_in=obj_heat.t_in,
                               t_out=obj_heat.t_out, space=obj_heat.space,
@@ -258,16 +257,11 @@ class SuccessiveApproximation:
                  self.avg_log_delta_temperature /
                  obj_cool.heat_coefficient)
 
-            delta_error = ((t_avg_heat_wall - t_avg_cool_wall) -
-                           ((obj_heat.delta_l /
-                             self.obj_solver_toa.lambda_steel) *
-                           self.heat_transfer_coefficient *
-                           self.avg_log_delta_temperature))
-            print(t_avg_heat_wall, t_avg_cool_wall)
-            print(delta_error)
+            error_heat = (t_avg_heat_wall_prev -
+                          t_avg_heat_wall) / t_avg_heat_wall_prev
+            error_cool = (t_avg_cool_wall -
+                          t_avg_cool_wall_prev) / t_avg_cool_wall
 
-            error = math.fabs(delta_error / (t_avg_heat_wall -
-                                             t_avg_cool_wall))
         return error
 
 
@@ -281,17 +275,23 @@ def interpolation(y_max, y_min, x_max, x_min, x):
 if __name__ == '__main__':
     inputs = InputValues()
 
-    domain_heat = LiquidDomain(matter=inputs.matter_heat, t_in=inputs.t_in_heat,
-                               t_out=inputs.t_out_heat, space=inputs.space_heat,
+    domain_heat = LiquidDomain(matter=inputs.matter_heat,
+                               t_in=inputs.t_in_heat,
+                               t_out=inputs.t_out_heat,
+                               space=inputs.space_heat,
                                d_out=inputs.d_out, delta_l=inputs.delta_l,
                                length=inputs.length, state='heat',
-                               consumption=inputs.consumption_heat, w=inputs.w_heat)
+                               consumption=inputs.consumption_heat,
+                               w=inputs.w_heat)
 
-    domain_cool = LiquidDomain(matter=inputs.matter_cool, t_in=inputs.t_in_cool,
-                               t_out=inputs.t_out_cool, space=inputs.space_cool,
+    domain_cool = LiquidDomain(matter=inputs.matter_cool,
+                               t_in=inputs.t_in_cool,
+                               t_out=inputs.t_out_cool,
+                               space=inputs.space_cool,
                                d_out=inputs.d_out, delta_l=inputs.delta_l,
                                length=inputs.length, state='cool',
-                               consumption=inputs.consumption_cool, w=inputs.w_cool)
+                               consumption=inputs.consumption_cool,
+                               w=inputs.w_cool)
 
     # domain_heat = LiquidDomain(matter='water', t_in=100,
     #                      t_out=50, space='in',
@@ -312,3 +312,6 @@ if __name__ == '__main__':
     SuccessiveApproximation(
         dict_of_domains=LiquidDomain.global_dict_of_domains,
         obj_solver_toa=heat_exchanger_solver).approximation()
+
+    print(f"Площадь теплообмена составила: "
+          f"{heat_exchanger_solver.heat_exchange_area:.3f} м^2")
