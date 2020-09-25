@@ -7,7 +7,7 @@ Heat Exchanger Calculator is a Python application for calculating heat transfer 
 Clone the repository from GitHub. Then create a virtual environment, and install all the dependencies.
 
 ```bash
-git clone https://github.com/username/foobar.git
+git clone https://github.com/QwertyNice/heat-exchanger-calculator.git 
 python3 -m venv env
 source env/bin/activate
 python -m pip install -r requirements.txt  # TODO 
