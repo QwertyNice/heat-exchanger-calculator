@@ -2,7 +2,7 @@ from main import interpolation
 
 
 def Miheev_in(self):
-    """Calculates Nusselt number using Miheev formula"""
+    """Calculates Nusselt number using Miheev's formula"""
     if self.re < 2300:
         return 0.15 * (self.re ** 0.33) * (self.pr_domain ** 0.43) * \
                self.solve_epsilon_t_count() * self.solve_epsilon_l_lam_count()
