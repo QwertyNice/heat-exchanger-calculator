@@ -19,6 +19,7 @@ Initialize the virtual environment, and run the script. First of all, check the 
 
 ```bash
 source env/bin/activate
+cd raw_ver_1
 python main.py
 ```
 
