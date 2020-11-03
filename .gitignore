@@ -1,3 +1,2 @@
 .idea/
-__pycashe__/
-raw_ver_1/__pycashe__/
+*.pyc
