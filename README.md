@@ -15,7 +15,7 @@ python -m pip install -r requirements.txt  # TODO
 
 ## Usage
 
-Initialize the virtual environment, and run the script. First of all, check the input algorithm (input.pdf or input.py)
+Initialize the virtual environment, and run the script. First of all, check the input algorithm (input.pdf or input.py). Note: Python version should be 3.8 or above.
 
 ```bash
 source env/bin/activate
