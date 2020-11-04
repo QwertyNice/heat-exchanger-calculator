@@ -14,16 +14,28 @@ class InputValues:
         The matter of heat domain. The matter can be 'water'.
     matter_cool : str
         The matter of cool domain. The matter can be as in 
-        matter_heat attribute.
+        `matter_heat`.
     space_heat : str
         Contains information about the heat domain's flowing space.
         It can be 'in' (tube-side) or 'out' (shell-side). Takes an 
-        opposite value of the space_cool attribute.
+        opposite value of the `space_cool`.
     space_cool : str
         Contains information about the heat domain's flowing space.
         It can be 'in' (tube-side) or 'out' (shell-side). Takes an 
-        opposite value of the space_heat attribute.
-    
+        opposite value of the `space_heat`.
+    t_enter_heat : float
+        The inlet temperature of the heat domain. Must be more and 
+        equal than `t_exit_heat`.
+    t_exit_heat : float
+        The otlet temperature of the heat domain. Must be less and 
+        equal than `t_enter_heat`.
+    t_enter_cool : float
+        The inlet temperature of the cool domain. Must be less and 
+        equal than `t_exit_cool`.
+    t_exit_cool : float
+        The otlet temperature of the cool domain. Must be more and 
+        equal than `t_enter_cool`.
+
     """
     
     def __init__(self):
@@ -34,8 +46,14 @@ class InputValues:
         
         self.matter_heat = self._input_matter(state='heat')
         self.matter_cool = self._input_matter(state='cool')
-
         self.space_heat, self.space_cool = self._input_space()
+
+        self.t_enter_heat = self._input_t(point='inlet', state='heat')
+        self.t_exit_heat = self._input_t(point='outlet', state='heat')
+        self.t_enter_cool = self._input_t(point='inlet', state='cool')
+        self.t_exit_cool = self._input_t(point='outlet', state='cool')
+
+
 
     @staticmethod
     def _input_matter(state):
@@ -65,3 +83,20 @@ class InputValues:
         if space == 'in':
             return 'in', 'out'
         return 'out', 'in'
+
+    @staticmethod
+    def _input_t(point, state):
+        """Connects the domain with its inlet/outlet temperature."""
+        t = input(f'Enter the {point} temperature of the {state} domain, °C: ')
+        try:
+            t = float(t)
+        except ValueError:
+            message = f'Incorrect {point} temperature of the {state} domain ' \
+                      f'has been entered: {t}'
+            raise InputError(message)
+        if t < 0:
+            message = f'Non-positive {point} temperature of the {state} domain ' \
+                      f'has been entered.'
+            raise InputError(message)
+        print('-' * 69)
+        return t
