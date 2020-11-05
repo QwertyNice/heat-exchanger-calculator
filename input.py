@@ -24,17 +24,17 @@ class InputValues:
         It can be 'in' (tube-side) or 'out' (shell-side). Takes an 
         opposite value of the `space_heat`.
     t_enter_heat : float
-        The inlet temperature of the heat domain. Must be more and 
-        equal than `t_exit_heat`.
+        The inlet temperature of the heat domain. Must be greater 
+        than `t_exit_heat`.
     t_exit_heat : float
-        The otlet temperature of the heat domain. Must be less and 
-        equal than `t_enter_heat`.
+        The otlet temperature of the heat domain. Must be less than 
+        `t_enter_heat`.
     t_enter_cool : float
-        The inlet temperature of the cool domain. Must be less and 
-        equal than `t_exit_cool`.
+        The inlet temperature of the cool domain. Must be less than 
+        `t_exit_cool`.
     t_exit_cool : float
-        The otlet temperature of the cool domain. Must be more and 
-        equal than `t_enter_cool`.
+        The otlet temperature of the cool domain. Must be greater 
+        than `t_enter_cool`.
 
     """
     
@@ -47,13 +47,12 @@ class InputValues:
         self.matter_heat = self._input_matter(state='heat')
         self.matter_cool = self._input_matter(state='cool')
         self.space_heat, self.space_cool = self._input_space()
-
         self.t_enter_heat = self._input_t(point='inlet', state='heat')
         self.t_exit_heat = self._input_t(point='outlet', state='heat')
         self.t_enter_cool = self._input_t(point='inlet', state='cool')
         self.t_exit_cool = self._input_t(point='outlet', state='cool')
-
-
+        self._check_value_t()
+        # TODO
 
     @staticmethod
     def _input_matter(state):
@@ -100,3 +99,23 @@ class InputValues:
             raise InputError(message)
         print('-' * 69)
         return t
+
+    def _check_value_t(self):
+        """Checks the correct dependences between all temperatures"""
+        max_t = {'water': 370}
+        max_liq_heat_t = max_t[self.matter_heat]
+        max_liq_cool_t = max_t[self.matter_cool]
+        if self.t_enter_heat <= self.t_exit_heat:
+            message = 'Inlet temperature of the heat domain is less than or ' \
+                      'equal to the outlet temperature.'
+            raise InputError(message)
+        if self.t_enter_cool >= self.t_exit_cool:
+            message = 'Inlet temperature of the cool domain is greater than or ' \
+                      'equal to the outlet temperature.'
+            raise InputError(message)
+        if not 0 <= (self.t_enter_heat + self.t_exit_heat) / 2 < max_liq_heat_t:
+            message = 'Mean temperature of the heat domain goes beyond 0..370°C'
+            raise InputError(message)
+        if not 0 <= (self.t_enter_cool + self.t_exit_cool) / 2 < max_liq_cool_t:
+            message = 'Mean temperature of the cool domain goes beyond 0..370°C'
+            raise InputError(message)
