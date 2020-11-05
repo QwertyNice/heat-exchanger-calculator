@@ -52,7 +52,8 @@ class InputValues:
         self.t_enter_cool = self._input_t(point='inlet', state='cool')
         self.t_exit_cool = self._input_t(point='outlet', state='cool')
         self._check_value_t()
-        # TODO
+        
+        self.consumption_heat, self.consumption_cool = self._input_consumption()
 
     @staticmethod
     def _input_matter(state):
@@ -94,7 +95,7 @@ class InputValues:
                       f'has been entered: {t}'
             raise InputError(message)
         if t < 0:
-            message = f'Non-positive {point} temperature of the {state} domain ' \
+            message = f'Negative {point} temperature of the {state} domain ' \
                       f'has been entered.'
             raise InputError(message)
         print('-' * 69)
@@ -119,3 +120,26 @@ class InputValues:
         if not 0 <= (self.t_enter_cool + self.t_exit_cool) / 2 < max_liq_cool_t:
             message = 'Mean temperature of the cool domain goes beyond 0..370°C'
             raise InputError(message)
+
+    def _input_consumption(self):
+        state = input('Enter for which domain the consumption is known: ' \
+                      '\'heat\' or \'cool\'? ').lower()
+        if state not in ('heat', 'cool'):
+            message = 'Incorrect state of domain has been entered.'
+            raise InputError(message)
+        print('-' * 69)
+
+        consumption = input(f'Enter the consumption of the {state} domain, kg/s' \
+                             ' (kilogram per second): ')
+        try:
+            consumption = float(consumption)
+        except ValueError:
+            message = f'Incorrect consumption of the {state} domain has been ' \
+                      f'entered: {consumption} kg/s.'
+            raise InputError(message)
+        if consumption <= 0:
+            message = f'Non-positive value of the consumption has been entered:' \
+                      f' {consumption} kg/s.'
+        if state == 'heat':
+            return consumption, None
+        return None, consumption
