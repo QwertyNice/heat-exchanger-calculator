@@ -58,13 +58,11 @@ class LiquidDomain:
         температуре потока.
         """
         local_dict_phys = dict()
-        assert 0 <= t < 370           # Добавили ассер, потом чекнуть
         with open('{}.csv'.format(matter)) as f:
             line_generator = csv.reader(f, delimiter=';')
             next(line_generator)
             symbol_phys = next(line_generator)
             line_generator = list(line_generator)  # Переделать генератор
-            # Сделали через лист (помойкак)
             len_line_generator = len(line_generator)
             for index in range(len_line_generator):
                 if float(line_generator[index - 1][0]) <= t < \
