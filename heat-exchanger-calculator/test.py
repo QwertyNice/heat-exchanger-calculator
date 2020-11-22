@@ -4,7 +4,6 @@ import csv
 def test_solve_phys_props(t, matter):
     with open('{}.csv'.format(matter)) as f:
         line_generator = csv.reader(f, delimiter=';')
-        next(line_generator)
         symbol_phys = next(line_generator)
         print(symbol_phys)
         tmp = symbol_phys.index('ro')

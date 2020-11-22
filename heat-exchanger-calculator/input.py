@@ -59,7 +59,7 @@ class InputValues:
     def _input_matter(state):
         """Connects a domain's state with its matter."""
         available_matters = {'water'}
-        print(f'Avaliable {state} domains: ', end='')
+        print(f'Available {state} domains: ', end='')
         print(*available_matters, sep=', ', end='.\n')
 
         matter = input('Enter the type of domain from the list above: ').lower()
@@ -141,5 +141,25 @@ class InputValues:
             message = f'Non-positive value of the consumption has been entered:' \
                       f' {consumption} kg/s.'
         if state == 'heat':
-            return consumption, None
-        return None, consumption
+        
+        
+        
+        
+        
+        
+        
+        
+        #     return consumption, None
+        # return None, consumption
+
+    def solve_heat_capacity(self):
+        with open('{}.csv'.format(self.matter)) as f:
+            line_generator = csv.reader(f, delimiter=';')
+            symbol_phys = next(line_generator)
+            index = symbol_phys.index('ro')
+            low_lvl = next(line_generator)
+            high_lvl = next(line_generator)
+            while not float(low_lvl[0]) <= t < float(high_lvl[0]):
+                low_lvl = high_lvl
+                high_lvl = next(line_generator)
+            print(low_lvl[0], low_lvl[index], high_lvl[0], high_lvl[index])
